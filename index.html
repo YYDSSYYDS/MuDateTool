@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>道具查询系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .search-section {
+            padding: 30px;
+            background: white;
+        }
+
+        .search-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-button.active {
+            color: #4facfe;
+            border-bottom-color: #4facfe;
+            background: rgba(79, 172, 254, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .results-section {
+            padding: 0 30px 30px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px 0;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .results-count {
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .clear-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .results-table th {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .results-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: top;
+        }
+
+        .results-table tr:hover {
+            background: rgba(79, 172, 254, 0.05);
+        }
+
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .item-name-cell {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .item-id-cell {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .category-cell {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .attributes-cell {
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .attr-item {
+            margin-bottom: 2px;
+        }
+
+        .attr-label {
+            font-weight: 500;
+            color: #666;
+        }
+
+        .attr-value {
+            color: #333;
+            margin-left: 5px;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 18px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .results-table {
+                font-size: 12px;
+            }
+            
+            .results-table th,
+            .results-table td {
+                padding: 8px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 道具查询系统</h1>
+            <p>支持按类别、编号、名称查询道具信息 - 实时查询</p>
+        </div>
+
+        <div class="search-section">
+            <div class="search-tabs">
+                <button class="tab-button active" onclick="switchTab('category')">道具-按类别查询</button>
+                <button class="tab-button" onclick="switchTab('id')">道具-按编号查询</button>
+                <button class="tab-button" onclick="switchTab('name')">道具-按名称查询</button>
+                <button class="tab-button" onclick="switchTab('monster')">怪物查询</button>
+            </div>
+
+            <div id="category-tab" class="tab-content active">
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="category-input">道具大类编号</label>
+                        <input type="number" id="category-input" placeholder="输入大类编号 (0-20)" min="0" max="20" oninput="searchByCategory()">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="subcategory-input">道具小类编号</label>
+                        <input type="number" id="subcategory-input" placeholder="输入小类编号 (可选)" min="0" oninput="searchByCategory()">
+                    </div>
+                </div>
+            </div>
+
+            <div id="id-tab" class="tab-content">
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="item-id">道具总编号</label>
+                        <input type="number" id="item-id" placeholder="输入道具总编号 (大类*512+小类)" min="0" oninput="searchById()">
+                    </div>
+                </div>
+            </div>
+
+            <div id="name-tab" class="tab-content">
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="item-name">道具名称</label>
+                        <input type="text" id="item-name" placeholder="输入道具名称关键字进行模糊查询" oninput="searchByName()">
+                    </div>
+                </div>
+            </div>
+
+            <div id="monster-tab" class="tab-content">
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="monster-id">怪物ID</label>
+                        <input type="number" id="monster-id" placeholder="输入怪物ID (可选)" min="0" oninput="searchMonster()">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="monster-name">怪物名称</label>
+                        <input type="text" id="monster-name" placeholder="输入怪物名称关键字" oninput="searchMonster()">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="monster-level">怪物等级</label>
+                        <input type="number" id="monster-level" placeholder="输入怪物等级 (可选)" min="1" oninput="searchMonster()">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-section">
+            <div class="results-header" style="display: none;">
+                <div class="results-count" id="results-count"></div>
+                <button class="clear-btn" onclick="clearResults()">清空结果</button>
+            </div>
+            <div id="results-container"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
